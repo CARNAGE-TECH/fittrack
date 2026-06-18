@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 const splits = {
   'Upper A': ['Incline bench press', 'Lat pulldown', 'Barbell row', 'Tricep pushdown', 'Barbell curl'],
@@ -37,6 +37,13 @@ const splitIcons = {
   )
 };
 
+const getSavedData = (email) => JSON.parse(localStorage.getItem('ft_data_' + email) || '{}');
+
+const getBestWeight = (workouts, exerciseName) => workouts.reduce((best, workout) => {
+  const match = workout.exercises?.find(ex => ex.name === exerciseName);
+  return Math.max(best, match?.weight || 0);
+}, 0);
+
 export default function Workout({ user }) {
   const [currentSplit, setCurrentSplit] = useState(null);
   const [sets, setSets] = useState({});
@@ -44,25 +51,57 @@ export default function Workout({ user }) {
   const [weights, setWeights] = useState({});
   const [notes, setNotes] = useState('');
   const [saved, setSaved] = useState(false);
+  const [restSeconds, setRestSeconds] = useState(0);
+
+  useEffect(() => {
+    if (!restSeconds) return undefined;
+    const timer = setInterval(() => setRestSeconds(seconds => Math.max(0, seconds - 1)), 1000);
+    return () => clearInterval(timer);
+  }, [restSeconds]);
 
   const selectSplit = (split) => {
+    const savedData = getSavedData(user.email);
+    const lastWorkout = [...(savedData.workouts || [])].reverse().find(w => w.split === split);
+    const nextSets = {};
+    const nextReps = {};
+    const nextWeights = {};
+
+    splits[split].forEach((exercise, i) => {
+      const previous = lastWorkout?.exercises?.find(ex => ex.name === exercise);
+      if (previous) {
+        nextSets[i] = previous.sets;
+        nextReps[i] = previous.reps;
+        nextWeights[i] = previous.weight;
+      }
+    });
+
     setCurrentSplit(split);
     setSaved(false);
     setNotes('');
-    setSets({});
-    setReps({});
-    setWeights({});
+    setSets(nextSets);
+    setReps(nextReps);
+    setWeights(nextWeights);
   };
 
   const saveWorkout = () => {
-    const exercises = splits[currentSplit].map((ex, i) => ({
-      name: ex,
-      sets: parseInt(sets[i]) || 3,
-      reps: parseInt(reps[i]) || 8,
-      weight: parseFloat(weights[i]) || 0
-    }));
+    const key = 'ft_data_' + user.email;
+    const existing = getSavedData(user.email);
+    const workouts = existing.workouts || [];
+
+    const exercises = splits[currentSplit].map((ex, i) => {
+      const weight = parseFloat(weights[i]) || 0;
+      const previousBest = getBestWeight(workouts, ex);
+      return {
+        name: ex,
+        sets: parseInt(sets[i]) || 3,
+        reps: parseInt(reps[i]) || 8,
+        weight,
+        isPr: weight > 0 && weight > previousBest
+      };
+    });
 
     const workout = {
+      id: Date.now().toString(),
       split: currentSplit,
       date: new Date().toLocaleDateString('en-GB'),
       notes,
@@ -70,17 +109,16 @@ export default function Workout({ user }) {
       timestamp: Date.now()
     };
 
-    const key = 'ft_data_' + user.email;
-    const existing = JSON.parse(localStorage.getItem(key) || '{}');
-    const workouts = existing.workouts || [];
-    workouts.push(workout);
-    localStorage.setItem(key, JSON.stringify({ ...existing, workouts }));
+    localStorage.setItem(key, JSON.stringify({ ...existing, workouts: [...workouts, workout] }));
     setSaved(true);
+    setRestSeconds(0);
     setTimeout(() => {
       setSaved(false);
       setCurrentSplit(null);
     }, 1800);
   };
+
+  const timerLabel = `${Math.floor(restSeconds / 60)}:${String(restSeconds % 60).padStart(2, '0')}`;
 
   if (!currentSplit) {
     return (
@@ -98,7 +136,7 @@ export default function Workout({ user }) {
                 onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none'; }}>
                 <div style={{ color: c.color, marginBottom: '10px' }}>{splitIcons[split]}</div>
                 <div style={{ fontSize: '15px', fontWeight: '600', color: '#111827', marginBottom: '4px' }}>{split}</div>
-                <div style={{ fontSize: '12px', color: '#6b7280' }}>{splits[split].slice(0, 3).join(' · ')}</div>
+                <div style={{ fontSize: '12px', color: '#6b7280' }}>{splits[split].slice(0, 3).join(' / ')}</div>
                 <div style={{ display: 'inline-block', marginTop: '10px', fontSize: '11px', padding: '3px 10px', borderRadius: '99px', background: c.bg, color: c.color, fontWeight: '500' }}>
                   {split.startsWith('Upper') ? 'Upper body' : 'Lower body'}
                 </div>
@@ -109,7 +147,6 @@ export default function Workout({ user }) {
       </div>
     );
   }
-
 
   return (
     <div style={{ padding: '1.5rem 1rem' }}>
@@ -122,6 +159,25 @@ export default function Workout({ user }) {
           style={{ background: '#f3f4f6', border: 'none', borderRadius: '8px', padding: '8px 14px', fontSize: '13px', color: '#374151', cursor: 'pointer', fontWeight: '500' }}>
           Change
         </button>
+      </div>
+
+      <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: '12px', padding: '1rem 1.25rem', marginBottom: '10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+        <div>
+          <div style={{ fontSize: '14px', fontWeight: '500', color: '#111827' }}>Rest timer</div>
+          <div style={{ fontSize: '26px', fontWeight: '600', color: restSeconds ? '#185FA5' : '#9ca3af', marginTop: '2px' }}>{timerLabel}</div>
+        </div>
+        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+          {[60, 90, 120].map(seconds => (
+            <button key={seconds} onClick={() => setRestSeconds(seconds)}
+              style={{ padding: '8px 10px', border: '1px solid #e5e7eb', borderRadius: '8px', background: 'white', color: '#374151', fontSize: '12px', fontWeight: '500', cursor: 'pointer' }}>
+              {seconds}s
+            </button>
+          ))}
+          <button onClick={() => setRestSeconds(0)}
+            style={{ padding: '8px 10px', border: 'none', borderRadius: '8px', background: '#f3f4f6', color: '#6b7280', fontSize: '12px', fontWeight: '500', cursor: 'pointer' }}>
+            Reset
+          </button>
+        </div>
       </div>
 
       {splits[currentSplit].map((ex, i) => (

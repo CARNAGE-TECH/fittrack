@@ -2,10 +2,29 @@ import { useState, useEffect } from 'react';
 
 const splitSchedule = ['Upper A', 'Lower A', 'Upper B', 'Lower B'];
 const splitDetails = {
-  'Upper A': 'Incline bench · Lat pulldown · Barbell row',
-  'Upper B': 'Overhead press · Cable row · Face pull',
-  'Lower A': 'Barbell squat · Leg press · Walking lunge',
-  'Lower B': 'Romanian deadlift · Hip thrust · Leg curl'
+  'Upper A': 'Incline bench / Lat pulldown / Barbell row',
+  'Upper B': 'Overhead press / Cable row / Face pull',
+  'Lower A': 'Barbell squat / Leg press / Walking lunge',
+  'Lower B': 'Romanian deadlift / Hip thrust / Leg curl'
+};
+
+const getNextSplit = (workouts) => {
+  const lastSplit = workouts[workouts.length - 1]?.split;
+  const lastIndex = splitSchedule.indexOf(lastSplit);
+  return splitSchedule[lastIndex >= 0 ? (lastIndex + 1) % splitSchedule.length : 0];
+};
+
+const getActiveStreak = (workouts) => {
+  const days = new Set(workouts.map(w => w.date).filter(Boolean));
+  let streak = 0;
+  const cursor = new Date();
+
+  while (days.has(cursor.toLocaleDateString('en-GB'))) {
+    streak += 1;
+    cursor.setDate(cursor.getDate() - 1);
+  }
+
+  return streak;
 };
 
 export default function Dashboard({ user, setUser }) {
@@ -29,7 +48,8 @@ export default function Dashboard({ user, setUser }) {
   const date = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
   const calPct = Math.min(100, Math.round((totals.cal / goals.cal) * 100)) || 0;
   const recent = workouts.slice(-3).reverse();
-  const todaySplit = splitSchedule[workouts.length % 4];
+  const todaySplit = getNextSplit(workouts);
+  const activeStreak = getActiveStreak(workouts);
 
   const cardStyle = {
     background: 'white', border: '1px solid #e5e7eb',
@@ -51,7 +71,7 @@ export default function Dashboard({ user, setUser }) {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '1rem' }}>
-        {[['Total workouts', workouts.length], ['Kcal today', totals.cal], ['Calorie goal', goals.cal]].map(([label, val]) => (
+        {[['Total workouts', workouts.length], ['Kcal today', totals.cal], ['Day streak', activeStreak]].map(([label, val]) => (
           <div key={label} style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: '12px', padding: '0.875rem', textAlign: 'center' }}>
             <div style={{ fontSize: '22px', fontWeight: '600', color: '#111827' }}>{val}</div>
             <div style={{ fontSize: '11px', color: '#6b7280', marginTop: '3px' }}>{label}</div>
@@ -79,7 +99,7 @@ export default function Dashboard({ user, setUser }) {
           </div>
         ) : (
           recent.map((w, i) => (
-            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: i < recent.length - 1 ? '1px solid #f3f4f6' : 'none' }}>
+            <div key={w.id || w.timestamp || i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: i < recent.length - 1 ? '1px solid #f3f4f6' : 'none' }}>
               <div>
                 <span style={{ fontSize: '11px', padding: '3px 10px', borderRadius: '99px', background: w.split.startsWith('Upper') ? '#EFF6FF' : '#F5F3FF', color: w.split.startsWith('Upper') ? '#1D4ED8' : '#6D28D9', fontWeight: '500' }}>{w.split}</span>
                 <span style={{ fontSize: '13px', color: '#6b7280', marginLeft: '8px' }}>{w.date}</span>

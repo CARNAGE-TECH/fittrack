@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Auth from './components/Auth';
 import Dashboard from './components/Dashboard';
 import Workout from './components/Workout';
@@ -40,7 +40,22 @@ function App() {
   const [user, setUser] = useState(null);
   const [activeTab, setActiveTab] = useState('dashboard');
 
-  if (!user) return <Auth setUser={setUser} />;
+  useEffect(() => {
+    const savedUser = JSON.parse(localStorage.getItem('ft_current_user') || 'null');
+    if (savedUser?.email) setUser(savedUser);
+  }, []);
+
+  const handleSetUser = (nextUser) => {
+    setUser(nextUser);
+    if (nextUser) {
+      localStorage.setItem('ft_current_user', JSON.stringify(nextUser));
+    } else {
+      localStorage.removeItem('ft_current_user');
+      setActiveTab('dashboard');
+    }
+  };
+
+  if (!user) return <Auth setUser={handleSetUser} />;
 
   return (
     <div className="app">
@@ -53,7 +68,7 @@ function App() {
         ))}
       </nav>
 
-      {activeTab === 'dashboard' && <Dashboard user={user} setUser={setUser} />}
+      {activeTab === 'dashboard' && <Dashboard user={user} setUser={handleSetUser} />}
       {activeTab === 'workout' && <Workout user={user} />}
       {activeTab === 'macros' && <Macros user={user} />}
       {activeTab === 'progress' && <Progress user={user} />}

@@ -64,7 +64,7 @@ export default function Auth({ setUser }) {
 
           <div style={{ marginBottom: '1rem' }}>
             <label style={{ fontSize: '13px', fontWeight: '500', color: '#374151', display: 'block', marginBottom: '6px' }}>Password</label>
-            <input style={inputStyle} type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} />
+            <input style={inputStyle} type="password" placeholder="********" value={password} onChange={e => setPassword(e.target.value)} />
           </div>
 
           {error && (
@@ -83,6 +83,9 @@ export default function Auth({ setUser }) {
             <span style={{ color: '#185FA5', cursor: 'pointer', fontWeight: '500' }} onClick={() => { setIsLogin(!isLogin); setError(''); }}>
               {isLogin ? 'Create account' : 'Sign in'}
             </span>
+          </div>
+          <div style={{ textAlign: 'center', fontSize: '11px', color: '#9ca3af', marginTop: '0.75rem', lineHeight: 1.4 }}>
+            Demo login stores data on this device only.
           </div>
         </div>
       </div>

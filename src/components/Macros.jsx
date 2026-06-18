@@ -1,14 +1,16 @@
 import { useState, useEffect, useRef } from 'react';
 
-const API_KEY = 'swXL8cEjkNFIuzbY6Sm5s7sMfLAyXXbQWbku0EZS';
+const API_KEY = process.env.REACT_APP_USDA_API_KEY || 'swXL8cEjkNFIuzbY6Sm5s7sMfLAyXXbQWbku0EZS';
+const defaultGoals = { cal: 2200, pro: 180, carb: 200, fat: 70 };
+const getProgressPct = (total, goal) => goal > 0 ? Math.min(100, Math.round(total / goal * 100)) : 0;
 
 export default function Macros({ user }) {
   const [tab, setTab] = useState('log');
   const [inputMode, setInputMode] = useState('search');
   const [foodLog, setFoodLog] = useState([]);
-  const [goals, setGoals] = useState({ cal: 2200, pro: 180, carb: 200, fat: 70 });
+  const [goals, setGoals] = useState(defaultGoals);
   const [totals, setTotals] = useState({ cal: 0, pro: 0, carb: 0, fat: 0 });
-  const [goalInputs, setGoalInputs] = useState({ cal: 2200, pro: 180, carb: 200, fat: 70 });
+  const [goalInputs, setGoalInputs] = useState(defaultGoals);
   const [goalSaved, setGoalSaved] = useState(false);
 
   // Search mode
@@ -30,7 +32,7 @@ export default function Macros({ user }) {
     const saved = JSON.parse(localStorage.getItem(key) || '{}');
     const today = new Date().toDateString();
     const log = (saved.foodLog || []).filter(f => f.date === today);
-    const g = saved.goals || { cal: 2200, pro: 180, carb: 200, fat: 70 };
+    const g = saved.goals || defaultGoals;
     setFoodLog(log);
     setGoals(g);
     setGoalInputs(g);
@@ -154,6 +156,46 @@ export default function Macros({ user }) {
     setTimeout(() => setGoalSaved(false), 1500);
   };
 
+  const exportData = () => {
+    const key = 'ft_data_' + user.email;
+    const data = localStorage.getItem(key) || '{}';
+    const blob = new Blob([data], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `fittrack-${user.email.replace(/[^a-z0-9]/gi, '-')}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const importData = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const parsed = JSON.parse(reader.result);
+        const nextData = {
+          workouts: Array.isArray(parsed.workouts) ? parsed.workouts : [],
+          foodLog: Array.isArray(parsed.foodLog) ? parsed.foodLog : [],
+          goals: parsed.goals || defaultGoals
+        };
+        localStorage.setItem('ft_data_' + user.email, JSON.stringify(nextData));
+        const today = new Date().toDateString();
+        const log = nextData.foodLog.filter(f => f.date === today);
+        setFoodLog(log);
+        setGoals(nextData.goals);
+        setGoalInputs(nextData.goals);
+        calcTotals(log);
+      } catch {
+        alert('That file is not valid FitTrack JSON.');
+      }
+      event.target.value = '';
+    };
+    reader.readAsText(file);
+  };
+
   const macros = [
     { label: 'Calories', key: 'cal', unit: '', color: '#185FA5' },
     { label: 'Protein', key: 'pro', unit: 'g', color: '#6D28D9' },
@@ -190,7 +232,7 @@ export default function Macros({ user }) {
                 <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '6px', fontWeight: '500' }}>{label}</div>
                 <div style={{ fontSize: '22px', fontWeight: '600', color }}>{totals[key]}{unit}</div>
                 <div style={{ background: '#f3f4f6', borderRadius: '99px', height: '5px', marginTop: '10px', overflow: 'hidden' }}>
-                  <div style={{ width: Math.min(100, Math.round(totals[key] / goals[key] * 100)) + '%', height: '100%', background: color, borderRadius: '99px', transition: 'width 0.4s' }} />
+                  <div style={{ width: getProgressPct(totals[key], goals[key]) + '%', height: '100%', background: color, borderRadius: '99px', transition: 'width 0.4s' }} />
                 </div>
                 <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '5px' }}>of {goals[key]}{unit}</div>
               </div>
@@ -227,7 +269,7 @@ export default function Macros({ user }) {
                         onMouseLeave={e => e.currentTarget.style.background = 'white'}>
                         <div style={{ fontWeight: '500', color: '#111827' }}>{food.description.length > 50 ? food.description.slice(0, 50) + '...' : food.description}</div>
                         <div style={{ fontSize: '12px', color: '#9ca3af', marginTop: '2px' }}>
-                          {Math.round(getNutrient(food, 1008))} kcal · {Math.round(getNutrient(food, 1003))}g protein per 100g
+                          {Math.round(getNutrient(food, 1008))} kcal / {Math.round(getNutrient(food, 1003))}g protein per 100g
                         </div>
                       </div>
                     ))}
@@ -237,7 +279,7 @@ export default function Macros({ user }) {
 
               {selectedFood && (
                 <div style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: '8px', padding: '10px 12px', marginBottom: '10px' }}>
-                  <div style={{ fontSize: '13px', fontWeight: '500', color: '#166534', marginBottom: '8px' }}>Selected — per 100g</div>
+                  <div style={{ fontSize: '13px', fontWeight: '500', color: '#166534', marginBottom: '8px' }}>Selected - per 100g</div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px', fontSize: '12px', textAlign: 'center' }}>
                     {[['Kcal', 1008], ['Protein', 1003], ['Carbs', 1005], ['Fat', 1004]].map(([label, id]) => (
                       <div key={id} style={{ background: 'white', borderRadius: '6px', padding: '6px' }}>
@@ -315,7 +357,7 @@ export default function Macros({ user }) {
                   <div style={{ flex: 1, marginRight: '10px' }}>
                     <div style={{ fontSize: '14px', fontWeight: '500', color: '#111827' }}>{f.name}</div>
                     <div style={{ fontSize: '12px', color: '#9ca3af', marginTop: '2px' }}>
-                      {f.cal} kcal · {f.pro}g protein{f.portion ? ` · ${f.portion}g` : ''} · {f.time}
+                      {f.cal} kcal / {f.pro}g protein{f.portion ? ` / ${f.portion}g` : ''} / {f.time}
                     </div>
                   </div>
                   <button onClick={() => removeFood(i)}
@@ -348,6 +390,23 @@ export default function Macros({ user }) {
             style={{ width: '100%', padding: '12px', background: '#185FA5', color: 'white', border: 'none', borderRadius: '10px', fontSize: '15px', fontWeight: '500', cursor: 'pointer' }}>
             Save goals
           </button>
+
+          <div style={{ borderTop: '1px solid #f3f4f6', marginTop: '1rem', paddingTop: '1rem' }}>
+            <div style={{ fontSize: '14px', fontWeight: '500', color: '#111827', marginBottom: '8px' }}>Local data</div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+              <button onClick={exportData}
+                style={{ width: '100%', padding: '11px', background: 'white', border: '1px solid #e5e7eb', borderRadius: '10px', fontSize: '14px', color: '#374151', cursor: 'pointer', fontWeight: '500' }}>
+                Export JSON
+              </button>
+              <label style={{ width: '100%', padding: '11px', background: 'white', border: '1px solid #e5e7eb', borderRadius: '10px', fontSize: '14px', color: '#374151', cursor: 'pointer', fontWeight: '500', textAlign: 'center' }}>
+                Import JSON
+                <input type="file" accept="application/json" onChange={importData} style={{ display: 'none' }} />
+              </label>
+            </div>
+            <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '8px', lineHeight: 1.4 }}>
+              Export before clearing browser data or moving to another device.
+            </div>
+          </div>
         </div>
       )}
     </div>
