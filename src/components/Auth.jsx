@@ -27,64 +27,70 @@ export default function Auth({ setUser }) {
   };
 
   const inputStyle = {
-    width: '100%', padding: '11px 14px', border: '1px solid #e5e7eb',
+    width: '100%', padding: '11px 14px', border: '1px solid #D6CFBF',
     borderRadius: '8px', fontSize: '14px', outline: 'none',
-    transition: 'border-color 0.15s', fontFamily: 'inherit'
+    transition: 'border-color 0.15s', fontFamily: 'inherit',
+    background: '#F5F0E8', color: '#0A0A0A'
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem', background: '#f0f2f5' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem', background: '#F5F0E8' }}>
       <div style={{ width: '100%', maxWidth: '400px' }}>
 
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '56px', height: '56px', background: '#185FA5', borderRadius: '16px', marginBottom: '1rem' }}>
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '56px', height: '56px', background: '#0A0A0A', borderRadius: '16px', marginBottom: '1rem' }}>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#F5F0E8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M18 8h1a4 4 0 0 1 0 8h-1" /><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z" />
               <line x1="6" y1="1" x2="6" y2="4" /><line x1="10" y1="1" x2="10" y2="4" /><line x1="14" y1="1" x2="14" y2="4" />
             </svg>
           </div>
-          <div style={{ fontSize: '26px', fontWeight: '600', color: '#111827', letterSpacing: '-0.5px' }}>FitTrack</div>
-          <div style={{ fontSize: '14px', color: '#6b7280', marginTop: '4px' }}>
+          <div style={{ fontSize: '26px', fontWeight: '600', color: '#0A0A0A', letterSpacing: '-0.5px' }}>FitTrack</div>
+          <div style={{ fontSize: '14px', color: '#6B6258', marginTop: '4px' }}>
             {isLogin ? 'Welcome back. Sign in to continue.' : 'Track your splits, log your lifts, hit your goals.'}
           </div>
         </div>
 
-        <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: '16px', padding: '2rem' }}>
+        <div style={{ background: '#EDE8DC', border: '1px solid #D6CFBF', borderRadius: '16px', padding: '2rem' }}>
           {!isLogin && (
             <div style={{ marginBottom: '1rem' }}>
-              <label style={{ fontSize: '13px', fontWeight: '500', color: '#374151', display: 'block', marginBottom: '6px' }}>Full name</label>
-              <input style={inputStyle} placeholder="Joseph" value={name} onChange={e => setName(e.target.value)} />
+              <label style={{ fontSize: '13px', fontWeight: '500', color: '#4A4035', display: 'block', marginBottom: '6px' }}>Full name</label>
+              <input style={inputStyle} placeholder="Joseph" value={name} onChange={e => setName(e.target.value)}
+                onFocus={e => e.target.style.borderColor = '#0A0A0A'} onBlur={e => e.target.style.borderColor = '#D6CFBF'} />
             </div>
           )}
 
           <div style={{ marginBottom: '1rem' }}>
-            <label style={{ fontSize: '13px', fontWeight: '500', color: '#374151', display: 'block', marginBottom: '6px' }}>Email</label>
-            <input style={inputStyle} type="email" placeholder="you@email.com" value={email} onChange={e => setEmail(e.target.value)} />
+            <label style={{ fontSize: '13px', fontWeight: '500', color: '#4A4035', display: 'block', marginBottom: '6px' }}>Email</label>
+            <input style={inputStyle} type="email" placeholder="you@email.com" value={email} onChange={e => setEmail(e.target.value)}
+              onFocus={e => e.target.style.borderColor = '#0A0A0A'} onBlur={e => e.target.style.borderColor = '#D6CFBF'} />
           </div>
 
           <div style={{ marginBottom: '1rem' }}>
-            <label style={{ fontSize: '13px', fontWeight: '500', color: '#374151', display: 'block', marginBottom: '6px' }}>Password</label>
-            <input style={inputStyle} type="password" placeholder="********" value={password} onChange={e => setPassword(e.target.value)} />
+            <label style={{ fontSize: '13px', fontWeight: '500', color: '#4A4035', display: 'block', marginBottom: '6px' }}>Password</label>
+            <input style={inputStyle} type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)}
+              onFocus={e => e.target.style.borderColor = '#0A0A0A'} onBlur={e => e.target.style.borderColor = '#D6CFBF'} />
           </div>
 
           {error && (
-            <div style={{ background: '#FEF2F2', color: '#991B1B', fontSize: '13px', padding: '10px 12px', borderRadius: '8px', marginBottom: '12px' }}>
+            <div style={{ background: 'rgba(180,30,30,0.1)', color: '#8B0000', fontSize: '13px', padding: '10px 12px', borderRadius: '8px', marginBottom: '12px' }}>
               {error}
             </div>
           )}
 
           <button onClick={handleSubmit}
-            style={{ width: '100%', padding: '12px', background: '#185FA5', color: 'white', border: 'none', borderRadius: '8px', fontSize: '15px', fontWeight: '500', cursor: 'pointer', transition: 'background 0.15s' }}>
+            style={{ width: '100%', padding: '12px', background: '#0A0A0A', color: '#F5F0E8', border: 'none', borderRadius: '8px', fontSize: '15px', fontWeight: '500', cursor: 'pointer', transition: 'background 0.15s' }}
+            onMouseEnter={e => e.target.style.background = '#2a2a2a'}
+            onMouseLeave={e => e.target.style.background = '#0A0A0A'}>
             {isLogin ? 'Sign in' : 'Create account'}
           </button>
 
-          <div style={{ textAlign: 'center', fontSize: '13px', color: '#6b7280', marginTop: '1.25rem' }}>
+          <div style={{ textAlign: 'center', fontSize: '13px', color: '#6B6258', marginTop: '1.25rem' }}>
             {isLogin ? 'New here? ' : 'Already have an account? '}
-            <span style={{ color: '#185FA5', cursor: 'pointer', fontWeight: '500' }} onClick={() => { setIsLogin(!isLogin); setError(''); }}>
+            <span style={{ color: '#0A0A0A', cursor: 'pointer', fontWeight: '600' }} onClick={() => { setIsLogin(!isLogin); setError(''); }}>
               {isLogin ? 'Create account' : 'Sign in'}
             </span>
           </div>
-          <div style={{ textAlign: 'center', fontSize: '11px', color: '#9ca3af', marginTop: '0.75rem', lineHeight: 1.4 }}>
+          <div style={{ textAlign: 'center', fontSize: '11px', color: '#9A8F7F', marginTop: '0.75rem', lineHeight: 1.4 }}>
             Demo login stores data on this device only.
           </div>
         </div>

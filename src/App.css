@@ -6,20 +6,21 @@
 
 body {
   font-family: 'Segoe UI', Arial, Helvetica, sans-serif;
-  background: #f0f2f5;
+  background: #F5F0E8;
 }
 
 .app {
   max-width: 680px;
   margin: 0 auto;
   min-height: 100vh;
+  background: #F5F0E8;
 }
 
 .nav {
   display: flex;
   gap: 4px;
-  background: white;
-  border-bottom: 1px solid #e5e7eb;
+  background: #EDE8DC;
+  border-bottom: 1px solid #D6CFBF;
   padding: 0.5rem 1rem;
   position: sticky;
   top: 0;
@@ -33,7 +34,7 @@ body {
   border: none;
   border-radius: 8px;
   font-size: 11px;
-  color: #9ca3af;
+  color: #8A7F6F;
   cursor: pointer;
   display: flex;
   flex-direction: column;
@@ -48,8 +49,8 @@ body {
 }
 
 .nav-btn.active {
-  background: #EFF6FF;
-  color: #185FA5;
+  background: #0A0A0A;
+  color: #F5F0E8;
   font-weight: 500;
 }
 
